@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>PDF to Markdown</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light py-5">
+  <div class="container">
+    <h2 class="mb-4">PDF to Markdown Converter</h2>
+
+    <input type="file" class="form-control mb-3" id="pdfFile" accept=".pdf">
+    <button class="btn btn-primary mb-3" onclick="uploadFile()">Convert</button>
+
+    <h5>Markdown Output:</h5>
+    <pre id="output" class="bg-white border p-3 rounded" style="min-height: 200px;">Your markdown will appear here...</pre>
+
+    <a id="downloadBtn" class="btn btn-success mt-3 d-none" href="#" download="converted.md">Download Markdown</a>
+  </div>
+
+  <script>
+    async function uploadFile() {
+      const fileInput = document.getElementById('pdfFile');
+      const file = fileInput.files[0];
+      const output = document.getElementById('output');
+      const downloadBtn = document.getElementById('downloadBtn');
+
+      if (!file) {
+        alert("Please select a PDF file.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        output.textContent = "Converting...";
+        const response = await fetch("/convert", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          output.textContent = data.markdown;
+          downloadBtn.href = `/download/${data.filename}`;
+          downloadBtn.classList.remove("d-none");
+        } else {
+          output.textContent = "Error: " + (data.message || "Conversion failed.");
+          downloadBtn.classList.add("d-none");
+        }
+      } catch (err) {
+        output.textContent = "Failed to fetch: " + err.message;
+        downloadBtn.classList.add("d-none");
+      }
+    }
+  </script>
+</body>
+</html>
